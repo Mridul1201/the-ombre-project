@@ -172,8 +172,8 @@ footer{background:var(--esp);color:var(--cream);margin-top:3rem}.foot{display:gr
 </section>
 <section class="wrap contact-grid" id="enquiry"><div class="formcard">
 
-<form method="post" action="#contact" novalidate id="enquiry-form" data-mail="https://formsubmit.co/ajax/theombreprojectco@gmail.com">
-<input type="hidden" name="tok" value="5523bafcb892ac0e5d74da7db2e1cb2d"><div class="hp" aria-hidden="true"><input name="website" tabindex="-1" autocomplete="off"></div>
+<form method="POST" action="https://formsubmit.co/theombreprojectco@gmail.com" novalidate id="enquiry-form">
+<input type="hidden" name="_subject" value="New enquiry from The Ombre Project website"><input type="hidden" name="_template" value="table"><div class="hp" aria-hidden="true"><input name="_honey" tabindex="-1" autocomplete="off"></div>
 <div class="fld"><label for="name">Full name</label>
 <input id="name" name="name" type="text" value="" placeholder="" required autocomplete="name"></div><div class="fld"><label for="email">Email address</label>
 <input id="email" name="email" type="email" value="" placeholder="" required autocomplete="email"></div><div class="fld"><label for="phone">Phone number, including country code</label>
@@ -210,25 +210,23 @@ const p=q('[data-speed]');let t=0;addEventListener('scroll',()=>{if(t)return;t=r
 
 })();
 
-/* static-site: page routing + form sent straight to FormSubmit (no server) */
-(()=>{const q=(s,r=document)=>[...r.querySelectorAll(s)],N=['home','about','workshops','partner','contact'];let cur=0;
-function show(){let h=location.hash.slice(1);if(!N.includes(h)){if(cur)return;h='home'}cur=1;
+/* static site: page routing + plain HTML form POST to FormSubmit (their documented method, reCAPTCHA on) */
+(()=>{const q=(s,r=document)=>[...r.querySelectorAll(s)],N=['home','about','workshops','partner','contact'],sent=/[?&]sent=1/.test(location.search);let cur=0;
+function show(){let h=location.hash.slice(1)||(sent&&!cur?'contact':'');if(!N.includes(h)){if(cur)return;h='home'}cur=1;
 q('.pg').forEach(p=>p.hidden=p.dataset.page!==h);
 q('header nav a,.foot nav a').forEach(a=>a.getAttribute('href')==='#'+h?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
 const b=q('.burger')[0];if(q('#nav')[0].classList.contains('open'))b.click();scrollTo(0,0)}
 addEventListener('hashchange',show);show();
 const f=q('#enquiry-form')[0];if(!f)return;
 q('[data-w]').forEach(a=>a.addEventListener('click',()=>{f.elements.workshop.value=decodeURIComponent(a.dataset.w)}));
-f.addEventListener('submit',async e=>{e.preventDefault();
- if(!f.checkValidity()){f.reportValidity();return}
- const s=f.querySelector('[type=submit]'),m=q('#form-msg')[0],o=Object.fromEntries(new FormData(f));
- const done=()=>{const t=document.createElement('div');t.className='thanks';t.setAttribute('role','status');
-  t.innerHTML='<h2>Thank you. Your enquiry has been received.</h2><p>We’ll reply to the email address you gave. For anything urgent, call or WhatsApp us.</p>';f.hidden=true;f.before(t)};
- if(o.website){done();return}
- delete o.tok;delete o.website;
- Object.assign(o,{_subject:'New enquiry: '+o.name+' ('+o.workshop+')',_replyto:o.email,_template:'table',_captcha:'false'});
- s.disabled=true;s.textContent='Sending…';m.textContent='';m.className='';
- let ok=false;try{const r=await fetch(f.dataset.mail,{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(o)});
-  const j=await r.json().catch(()=>({}));ok=r.ok&&String(j.success)!=='false';if(!ok)console.warn('FormSubmit:',r.status,j)}catch(err){console.warn(err)}
- if(ok)done();else{m.textContent='Sorry, your enquiry couldn’t be sent. Please call or WhatsApp us on +91 8368869818, or email theombreprojectco@gmail.com.';m.className='flash error';s.disabled=false;s.textContent='Submit Enquiry'}})})();
+if(sent){const t=document.createElement('div');t.className='thanks';t.setAttribute('role','status');
+ t.innerHTML='<h2>Thank you. Your enquiry has been received.</h2><p>We’ll reply to the email address you gave. For anything urgent, call or WhatsApp us.</p>';f.hidden=true;f.before(t);history.replaceState(null,'',location.pathname+'#contact')}
+const btn=f.querySelector('[type=submit]'),add=(n,v)=>{let i=f.elements[n];if(!i){i=document.createElement('input');i.type='hidden';i.name=n;f.append(i)}i.value=v};
+f.addEventListener('submit',e=>{const m=q('#form-msg')[0];
+ if(!f.checkValidity()){e.preventDefault();f.reportValidity();return}
+ if(!/^https?:$/.test(location.protocol)){e.preventDefault();m.textContent='This page is open as a file on your computer, so it cannot send. Please open the live website link instead, or WhatsApp us.';m.className='flash error';return}
+ add('_next',location.origin+location.pathname+'?sent=1');add('_url',location.href.split('#')[0]);
+ btn.disabled=true;btn.textContent='Sending…'});
+addEventListener('pageshow',ev=>{if(ev.persisted){btn.disabled=false;btn.textContent='Submit Enquiry'}});
+})();
 </script></body></html>
